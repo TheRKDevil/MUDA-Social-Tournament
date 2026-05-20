@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0d0d14;
+    color: #e8e6f0;
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 30%, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: #6b6880;
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .table-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .error {
+    text-align: center;
+    color: #f87171;
+    font-size: 0.9rem;
+    padding: 2rem;
+  }
+
+  .loading {
+    text-align: center;
+    color: #6b6880;
+    font-size: 0.9rem;
+    padding: 3rem;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+  }
+
+  thead th {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6b6880;
+    padding: 0 1.2rem 0.5rem;
+    text-align: left;
+  }
+
+  thead th:last-child { text-align: right; }
+
+  tbody tr {
+    background: #17161f;
+    border-radius: 12px;
+    transition: background 0.15s;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  tbody tr:hover { background: #1e1c2a; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* stagger rows */
+  tbody tr:nth-child(1)  { animation-delay: 0.04s; }
+  tbody tr:nth-child(2)  { animation-delay: 0.08s; }
+  tbody tr:nth-child(3)  { animation-delay: 0.12s; }
+  tbody tr:nth-child(4)  { animation-delay: 0.16s; }
+  tbody tr:nth-child(5)  { animation-delay: 0.20s; }
+  tbody tr:nth-child(6)  { animation-delay: 0.24s; }
+  tbody tr:nth-child(7)  { animation-delay: 0.28s; }
+  tbody tr:nth-child(8)  { animation-delay: 0.32s; }
+  tbody tr:nth-child(9)  { animation-delay: 0.36s; }
+  tbody tr:nth-child(10) { animation-delay: 0.40s; }
+
+  td {
+    padding: 0.9rem 1.2rem;
+    font-size: 0.95rem;
+  }
+
+  td:first-child { border-radius: 12px 0 0 12px; }
+  td:last-child  { border-radius: 0 12px 12px 0; text-align: right; }
+
+  .rank {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    width: 2.5rem;
+    color: #3d3a50;
+  }
+
+  .rank-1 .rank { color: #f59e0b; }
+  .rank-2 .rank { color: #9ca3af; }
+  .rank-3 .rank { color: #cd7c3a; }
+
+  .medal {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-size: 0.8rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+  }
+
+  .rank-1 .medal { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .rank-2 .medal { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid rgba(156,163,175,0.2); }
+  .rank-3 .medal { background: rgba(205,124,58,0.12); color: #cd7c3a; border: 1px solid rgba(205,124,58,0.2); }
+
+  .name-cell {
+    font-weight: 500;
+    color: #e8e6f0;
+  }
+
+  .rank-1 .name-cell { color: #fff; }
+
+  .score-cell {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #a78bfa;
+  }
+
+  .rank-1 .score-cell { color: #f59e0b; }
+
+  .bar-cell {
+    width: 120px;
+  }
+
+  .bar-bg {
+    background: #232130;
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 6px;
+    border-radius: 99px;
+    background: #7c3aed;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .rank-1 .bar-fill { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+  .rank-2 .bar-fill { background: #6b7280; }
+  .rank-3 .bar-fill { background: #a16207; }
+
+  .updated {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: #3d3a50;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Leaderboard</h1>
+  <p id="subtitle">Loading scores…</p>
+</header>
+
+<div class="table-wrap">
+  <div class="loading" id="loading">Fetching rankings…</div>
+  <div class="error" id="error" style="display:none"></div>
+  <table id="board" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th class="bar-cell" style="text-align:left">Score</th>
+        <th>Points</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p class="updated" id="updated"></p>
+</div>
+
+<script>
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCBaWOc4zoCAsDfT4N5zwwtRrImSfMSY4KswmwaRF-9BQuBlYqVyvGW3bcmrtXc-g0DovVyI9J7jDR/pub?gid=0&single=true&output=csv";
+
+function parseCSV(text) {
+  return text.trim().split('\n').map(line => {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(cur.trim());
+    return cols;
+  });
+}
+
+async function load() {
+  try {
+    const res = await fetch(SHEET_CSV);
+    if (!res.ok) throw new Error('Network error');
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    // First row = headers, rest = data
+    const headers = rows[0];
+    const data = rows.slice(1).filter(r => r.some(c => c));
+
+    // Detect which columns to use
+    // Try to find a "name" col and a numeric "score/points" col
+    const nameIdx = headers.findIndex(h => /name|player|user|team/i.test(h)) ?? 0;
+    const scoreIdx = headers.findIndex(h => /score|point|total|rank/i.test(h));
+    const ni = nameIdx >= 0 ? nameIdx : 0;
+    const si = scoreIdx >= 0 ? scoreIdx : (ni === 0 ? 1 : 0);
+
+    // Sort by score descending if numeric
+    const sorted = [...data].sort((a, b) => {
+      const av = parseFloat((a[si]||'').replace(/,/g,''));
+      const bv = parseFloat((b[si]||'').replace(/,/g,''));
+      return (isNaN(bv)?-1:bv) - (isNaN(av)?-1:av);
+    });
+
+    const maxScore = Math.max(...sorted.map(r => parseFloat((r[si]||'0').replace(/,/g,'')) || 0));
+
+    const tbody = document.getElementById('rows');
+    tbody.innerHTML = '';
+
+    sorted.forEach((row, i) => {
+      const rank = i + 1;
+      const name = row[ni] || '—';
+      const scoreRaw = parseFloat((row[si]||'0').replace(/,/g,'')) || 0;
+      const pct = maxScore > 0 ? Math.round((scoreRaw / maxScore) * 100) : 0;
+      const displayScore = Number.isInteger(scoreRaw) ? scoreRaw.toLocaleString() : scoreRaw.toFixed(1);
+
+      const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
+      const medal = rank <= 3
+        ? `<span class="medal">${rank}</span>`
+        : `<span class="rank">${rank}</span>`;
+
+      const tr = document.createElement('tr');
+      tr.className = rankClass;
+      tr.innerHTML = `
+        <td>${medal}</td>
+        <td class="name-cell">${name}</td>
+        <td class="bar-cell">
+          <div class="bar-bg"><div class="bar-fill" style="width:0%" data-pct="${pct}"></div></div>
+        </td>
+        <td class="score-cell">${displayScore}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Animate bars after paint
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.bar-fill').forEach(el => {
+        setTimeout(() => { el.style.width = el.dataset.pct + '%'; }, 100);
+      });
+    });
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('board').style.display = 'table';
+    document.getElementById('subtitle').textContent = `${sorted.length} players`;
+    document.getElementById('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = 'Could not load leaderboard. Make sure the sheet is published to the web.';
+  }
+}
+
+load();
+// Auto-refresh every 60 seconds
+setInterval(load, 60000);
+</script>
+</body>
+</html>
