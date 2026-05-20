@@ -205,8 +205,7 @@
       <tr>
         <th>#</th>
         <th>Name</th>
-        <th class="bar-cell" style="text-align:left">Score</th>
-        <th class="right">Points</th>
+        <th class="right">Score</th>
         <th class="right">Games</th>
       </tr>
     </thead>
@@ -292,20 +291,12 @@ async function load() {
       tr.innerHTML = `
         <td>${rankEl}</td>
         <td class="name-cell">${name}</td>
-        <td class="bar-cell">
-          <div class="bar-bg"><div class="bar-fill" style="width:0%" data-pct="${pct}"></div></div>
-        </td>
         <td class="points-cell">${dispPts}</td>
         <td class="games-cell">${games}</td>
       `;
       tbody.appendChild(tr);
     });
 
-    requestAnimationFrame(() => {
-      document.querySelectorAll('.bar-fill').forEach(el => {
-        setTimeout(() => { el.style.width = el.dataset.pct + '%'; }, 100);
-      });
-    });
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('board').style.display   = 'table';
