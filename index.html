@@ -47,8 +47,13 @@
   .error {
     text-align: center;
     color: #f87171;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     padding: 2rem;
+    white-space: pre-line;
+    line-height: 1.6;
+    background: rgba(248,113,113,0.06);
+    border-radius: 12px;
+    border: 1px solid rgba(248,113,113,0.15);
   }
 
   .loading {
@@ -211,12 +216,13 @@
 </div>
 
 <script>
-const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRCBaWOc4zoCAsDfT4N5zwwtRrImSfMSY4KswmwaRF-9BQuBlYqVyvGW3bcmrtXc-g0DovVyI9J7jDR/pub?gid=0&single=true&output=csv";
+const SHEET_CSV = "https://docs.google.com/spreadsheets/d/1BGlPDurr0DcJRouQU4kWKHs7ZO7qb9MLzkJHwvhPWy4/pub?gid=0&single=true&output=csv";
 
 // Exact header names from the sheet
 const COL_NAME   = 'Player Name';
 const COL_POINTS = 'Points';
 const COL_GAMES  = 'Games Played';
+// (Rank column from the sheet is ignored — rank is derived from sort order)
 
 function parseCSV(text) {
   return text.trim().split('\n').map(line => {
@@ -236,9 +242,11 @@ function parseCSV(text) {
 async function load() {
   try {
     const res = await fetch(SHEET_CSV);
-    if (!res.ok) throw new Error('Network error');
+    if (!res.ok) throw new Error(`HTTP ${res.status} — check the sheet is published to web (File → Share → Publish to web).`);
     const text = await res.text();
     const rows = parseCSV(text);
+
+    if (rows.length === 0) throw new Error('The sheet returned empty data.');
 
     const headers = rows[0];
     const data    = rows.slice(1).filter(r => r.some(c => c));
@@ -247,7 +255,12 @@ async function load() {
     const si = headers.indexOf(COL_POINTS);
     const gi = headers.indexOf(COL_GAMES);
 
-    if (ni < 0 || si < 0) throw new Error(`Could not find columns "${COL_NAME}" / "${COL_POINTS}" in the sheet.`);
+    if (ni < 0 || si < 0) throw new Error(
+      `Wrong sheet tab loaded. Found columns: [${headers.join(', ')}]\n\n` +
+      `Expected "${COL_NAME}" and "${COL_POINTS}".\n\n` +
+      `Fix: In your published URL, change gid=0 to the correct sheet tab ID for "Player Points". ` +
+      `You can find the gid by clicking the Player Points tab in Google Sheets and checking the URL — it ends in #gid=XXXXXXX.`
+    );
 
     // Already sorted by the sheet, but sort here too as a safety net
     const sorted = [...data].sort((a, b) => {
